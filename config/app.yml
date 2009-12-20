@@ -1,0 +1,28 @@
+prod:
+  np_assets_optimizer_plugin:
+    enabled: true
+    class: npAssetsOptimizer
+    configuration:
+      javascript:
+        enabled: false
+        class: npOptimizerJavascript
+        params:
+          destination: /js/optimized.js
+          files: []
+      stylesheet: 
+        enabled: false
+        class: npOptimizerStylesheet
+        params:
+          destination: /css/optimized.css
+          files: []
+      png_image:
+        enabled: false
+        class: npOptimizerPngImage
+        params:
+          folders:
+            - %SF_WEB_DIR%/images
+
+all:
+  np_assets_optimizer_plugin:
+    enabled: false
+    configuration: []

@@ -1,0 +1,51 @@
+npAssetsOptimizerPlugin
+=======================
+
+**This plugin is in early pre-alpha state, documentation is totally incomplete and refactoring is in progress. DO NOT USE IN PRODUCTION.**
+
+This plugin provides a task to optimize web assets used in your project, typically for better frontend performances:
+
+ * CSS files will be combined and compressed with [cssmin](http://code.google.com/p/cssmin/)
+ * Javascript files will be combined and compressed with [JSMin](http://github.com/rgrove/jsmin-php/)
+ * PNG web images will be optimized with [pngout](http://www.jonof.id.au/pngout) if avaible on the system
+
+Of course, the optimizations made and their use is configurable by environments, so you can enable the call for optimized assets only in `prod` for example. Each optimization process can also be disabled. See the **Basic configuration** section of this document to find out how to do so.
+
+Everything is done by configuring some YAML by default, but the plugin architecture allows to easily extend the service and optimizers as well. See the **Advanced configuration** section of this document to find out how to do so.
+
+Installation
+------------
+
+TODO
+
+Basic configuration
+-------------------
+
+Basic configuration of assets optimization is done in a classic `app.yml` configuration file. The plugin ships with a default one you'll find in the `config` folder of the plugin directory.
+
+Usage
+-----
+
+Tasks are available under the `optimize` namespace:
+
+    $ php symfony list optimize
+
+The `type` option allows to set the type of assets to optimize:
+
+    $ php symfony optimize:assets --type=stylesheet
+    $ php symfony optimize:assets --type=javascript
+    $ php symfony optimize:assets --type=png_images
+
+To optimize all assets in one call:
+
+    $ php symfony optimize:assets --type=all
+
+Advanced Configuration
+----------------------
+
+TODO
+
+Credits
+-------
+
+This plugin and some part of the code it contains have been heavily inspired by Ryan Weaver's ioCombinerPlugin.
