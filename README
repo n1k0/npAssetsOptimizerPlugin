@@ -1,8 +1,6 @@
 npAssetsOptimizerPlugin
 =======================
 
-**This plugin is in early pre-alpha state, documentation is totally incomplete and refactoring is in progress. DO NOT USE IN PRODUCTION.**
-
 This plugin provides a task to optimize web assets used in your project, typically for better frontend performances:
 
  * CSS files will be combined and compressed with [cssmin](http://code.google.com/p/cssmin/)
@@ -21,7 +19,7 @@ Prerequisites
 ### Required
 
  * PHP 5.2.4
- * Symfony 1.3 or 1.4
+ * Symfony 1.2, 1.3 or 1.4
 
 ### Optional
 
@@ -31,12 +29,16 @@ Prerequisites
 Installation
 ------------
 
-This plugin is only installable using SVN at this moment:
+### Installation using PEAR
+
+    $ php symfony plugin:install -s beta npAssetsOptimizerPlugin
+
+### Installation using SVN
 
     $ cd /path/to/your/symfony/project
     $ svn co http://svn.symfony-project.com/plugins/npAssetsOptimizerPlugin/trunk plugin/npAssetsOptimizerPlugin
 
-No need to say that if you're using SVN for versionning your project, use the `svn:externals` property instead.
+No need to say that if you're using SVN for your project, use the `svn:externals` property instead.
 
 Basic configuration
 -------------------
