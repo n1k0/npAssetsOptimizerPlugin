@@ -17,6 +17,8 @@ class npAssetsOptimizerPluginConfiguration extends sfPluginConfiguration
     {
       $this->dispatcher->connect('context.load_factories', array($this, 'listenToContextLoadFactoriesEvent'));
     }
+    
+    sfConfig::set('sf_standard_helpers', array_merge(sfConfig::get('sf_standard_helpers', array()), array('npOptimizer')));
   }
   
   /**
@@ -29,8 +31,13 @@ class npAssetsOptimizerPluginConfiguration extends sfPluginConfiguration
   {
     $context = $event->getSubject();
     
+    if (!class_exists($serviceClass = sfConfig::get('app_np_assets_optimizer_plugin_class', 'npAssetsOptimizerService')))
+    {
+      throw new sfConfigurationException(sprintf('The %s service class does not exist', $serviceClass));
+    }
+    
     $configuration = sfConfig::get('app_np_assets_optimizer_plugin_configuration', array());
-    $assetsOptimizer = new npAssetsOptimizerService($context->getEventDispatcher(), $configuration);
+    $assetsOptimizer = new $serviceClass($context->getEventDispatcher(), $configuration);
     
     $context->set('assets_optimizer', $assetsOptimizer);
   }

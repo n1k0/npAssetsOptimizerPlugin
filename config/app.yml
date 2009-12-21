@@ -1,26 +1,26 @@
 prod:
   np_assets_optimizer_plugin:
-    enabled: true
-    class: npAssetsOptimizer
-    configuration:
-      javascript:
-        enabled: false
-        class: npOptimizerJavascript
-        params:
-          destination: /js/optimized.js
-          files: []
-      stylesheet: 
-        enabled: false
-        class: npOptimizerStylesheet
-        params:
-          destination: /css/optimized.css
-          files: []
-      png_image:
-        enabled: false
-        class: npOptimizerPngImage
-        params:
-          folders:
-            - %SF_WEB_DIR%/images
+    enabled: true                          # status of the plugin
+    class: npAssetsOptimizerService        # the plugin service class to use
+    configuration:                         # optimization service configuration
+      javascript:                          # Javascript optimizer configuration
+        enabled: false                     # status of optimization
+        class: npOptimizerJavascript       # the javascript optimizer class to use
+        params:                            # optimizer class configuration
+          destination: /js/optimized.js    # destination path for optimized .js file
+          files: []                        # list of js files to optimize and combine
+      stylesheet:                          # stylesheets configuration section
+        enabled: false                     # status of optimization
+        class: npOptimizerStylesheet       # the stylesheet optimizer class to use
+        params:                            # optimizer class configuration
+          destination: /css/optimized.css  # destination path for optimized .css file
+          files: []                        # list of css files to optimize and combine
+      png_image:                           # PNG images configuration section
+        enabled: false                     # status of optimization
+        class: npOptimizerPngImage         # the PNG image optimizer class to use
+        params:                            # optimizer class configuration
+          folders:                         # folders to scan for PNG files to optimize
+            - %SF_WEB_DIR%/images          # by default, contains the web/images folder
 
 all:
   np_assets_optimizer_plugin:

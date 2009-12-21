@@ -16,17 +16,47 @@ Everything is done by configuring some YAML by default, but the plugin architect
 Installation
 ------------
 
-TODO
+This plugin is only installable using SVN at this moment:
+
+    $ cd /path/to/your/symfony/project
+    $ svn co http://svn.symfony-project.com/plugins/npAssetsOptimizerPlugin/trunk plugin/npAssetsOptimizerPlugin
+
+No need to say that if you're using SVN for versionning your project, use the `svn:externals` property instead.
 
 Basic configuration
 -------------------
 
-Basic configuration of assets optimization is done in a classic `app.yml` configuration file. The plugin ships with a default one you'll find in the `config` folder of the plugin directory.
+Basic configuration of assets optimization is done in the `np_assets_optimizer_plugin` section of a standard `app.yml` configuration file. The plugin ships with a commented default one you'll find in the `config` folder of the plugin directory:
+
+    [yaml]
+    all:
+      np_assets_optimizer_plugin:
+        enabled: true                          # status of the plugin
+        class: npAssetsOptimizerService        # the plugin service class to use
+        configuration:                         # optimization service configuration
+          javascript:                          # Javascript optimizer configuration
+            enabled: false                     # status of optimization
+            class: npOptimizerJavascript       # the javascript optimizer class to use
+            params:                            # optimizer class configuration
+              destination: /js/optimized.js    # destination path for optimized .js file
+              files: []                        # list of js files to optimize and combine
+          stylesheet:                          # stylesheets configuration section
+            enabled: false                     # status of optimization
+            class: npOptimizerStylesheet       # the stylesheet optimizer class to use
+            params:                            # optimizer class configuration
+              destination: /css/optimized.css  # destination path for optimized .css file
+              files: []                        # list of css files to optimize and combine
+          png_image:                           # PNG images configuration section
+            enabled: false                     # status of optimization
+            class: npOptimizerPngImage         # the PNG image optimizer class to use
+            params:                            # optimizer class configuration
+              folders:                         # folders to scan for PNG files to optimize
+                - %SF_WEB_DIR%/images          # by default, contains the web/images folder
 
 Usage
 -----
 
-Tasks are available under the `optimize` namespace:
+Assets optimization tasks are available under the `optimize` namespace:
 
     $ php symfony list optimize
 
@@ -40,12 +70,38 @@ To optimize all assets in one call:
 
     $ php symfony optimize:assets --type=all
 
+These tasks **must be executed manually** every time you make one of these changes:
+
+ * adding or modifying a CSS file handled by the plugin
+ * adding or modifying a Javascript file handled by the plugin
+ * adding or modifying a PNG image handled by the plugin
+
+When optimized javascripts and css assets are generated, they aim to be used instead of the old ones. So you have to replace the calls to `include_javascripts()` and `include_stylesheets()` helpers in your layouts respectivelly by the `include_optimized_javascripts()` and `include_optimized_stylesheets()` ones, as shown in the example below:
+
+    [php]
+    <html>
+      <head>
+        <?php include_http_metas() ?>
+        <?php include_metas() ?>
+        <title>Foo</title>
+        <?php include_optimized_stylesheets() ?>
+      </head>
+      <body>
+        <?php echo $sf_content; ?>
+        <?php include_optimized_javascripts() ?>
+      </body>
+    </html>
+
+Note: Don't worry adding the `npOptimizer` helper to the `default_helpers` section of your `setting.yml` file, it will be automatically added at plugin configuration time.
+
 Advanced Configuration
 ----------------------
 
-TODO
+TODO: work in progress
 
 Credits
 -------
 
-This plugin and some part of the code it contains have been heavily inspired by Ryan Weaver's ioCombinerPlugin.
+This plugin is maintened by [Nicolas Perriault](http://prendreuncafe.com/).
+
+This plugin and some part of the code it contains have been heavily inspired by Ryan Weaver's [ioCombinerPlugin](http://www.symfony-project.org/plugins/ioCombinerPlugin), many thanks to him for the great inspiration and discussions.
