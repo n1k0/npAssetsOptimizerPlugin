@@ -126,7 +126,7 @@ Advanced Configuration
 If you want to manage asset optimization by yourself, just extend the corresponding optimizer class; for instance, if you want to compress and combine javascript files your way instead of JSMin or Google Closure, you'll have to extend the `npOptimizerJavascript` class and override its `optimizeFile()` method:
 
     [php]
-    class myOptimizerJavascriptGoogleClosureAPI extends npOptimizerJavascript
+    class myOptimizerJavascript extends npOptimizerJavascript
     {
       public function optimizeFile($file)
       {
@@ -148,7 +148,7 @@ Don't forget to declare the new optimizer to use for javascript assets in your `
         configuration:
           javascript:
             enabled: true
-            class: myOptimizerJavascriptGoogleClosureAPI
+            class: myOptimizerJavascript
             params:
               destination: /js/optimized.js
               files:
