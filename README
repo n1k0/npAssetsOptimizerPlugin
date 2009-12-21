@@ -6,12 +6,27 @@ npAssetsOptimizerPlugin
 This plugin provides a task to optimize web assets used in your project, typically for better frontend performances:
 
  * CSS files will be combined and compressed with [cssmin](http://code.google.com/p/cssmin/)
- * Javascript files will be combined and compressed with [JSMin](http://github.com/rgrove/jsmin-php/)
- * PNG web images will be optimized with [pngout](http://www.jonof.id.au/pngout) if avaible on the system
+ * Javascript files will be combined and compressed with [JSMin](http://github.com/rgrove/jsmin-php/), or alternatively using the [Google Closure Compiler API](http://code.google.com/intl/en_US/closure/compiler/docs/api-ref.html)
+ * PNG web images will be optimized with [pngout](http://www.jonof.id.au/pngout) if avalaible on the system
+
+Combined javascript and css files will then replace original ones in the response, with a timestamp appended as a GET parameter to force browsers to redownload them in case they're served with an `Expires` header and/or `304` HTTP status code, and if they've changed in the meanwhile.
 
 Of course, the optimizations made and their use is configurable by environments, so you can enable the call for optimized assets only in `prod` for example. Each optimization process can also be disabled. See the **Basic configuration** section of this document to find out how to do so.
 
 Everything is done by configuring some YAML by default, but the plugin architecture allows to easily extend the service and optimizers as well. See the **Advanced configuration** section of this document to find out how to do so.
+
+Prerequisites
+-------------
+
+### Required
+
+ * PHP 5.2.4
+ * Symfony 1.3 or 1.4
+
+### Optional
+
+ * PHP CURL extension enabled and available using the php command line for Google Closure Compiler support
+ * The `pngout` binary executable available on the system ([get it here](http://www.jonof.id.au/pngout)) to optimize PNG images (btw, Windows family OSes are not currently supported for this task)
 
 Installation
 ------------
@@ -38,20 +53,29 @@ Basic configuration of assets optimization is done in the `np_assets_optimizer_p
             enabled: false                     # status of optimization
             class: npOptimizerJavascript       # the javascript optimizer class to use
             params:                            # optimizer class configuration
+              driver: jsmin                    # driver name (jsmin/google_closure_compiler)
               destination: /js/optimized.js    # destination path for optimized .js file
-              files: []                        # list of js files to optimize and combine
+              files:                           # list of js assets to optimize and combine
+                - jquery.js
+                - jquery-ui.js
+                - application.js
           stylesheet:                          # stylesheets configuration section
             enabled: false                     # status of optimization
             class: npOptimizerStylesheet       # the stylesheet optimizer class to use
             params:                            # optimizer class configuration
               destination: /css/optimized.css  # destination path for optimized .css file
-              files: []                        # list of css files to optimize and combine
+              files:                           # list of css assets to optimize and combine
+                - /facebox/facebox.css
+                - main
+                - skins/foo.css
           png_image:                           # PNG images configuration section
             enabled: false                     # status of optimization
             class: npOptimizerPngImage         # the PNG image optimizer class to use
             params:                            # optimizer class configuration
               folders:                         # folders to scan for PNG files to optimize
                 - %SF_WEB_DIR%/images          # by default, contains the web/images folder
+
+**Note:** for the `files` section of both `javascript` and `stylesheet` optimizer configuration sections, the ordering of files is extremely important and should reflect the order used in your own `view.yml` files. Also, the very same syntax should be used: don't use `main.css` in the `app.yml` file where it's `main` in the `view.yml` one.
 
 Usage
 -----
@@ -62,8 +86,8 @@ Assets optimization tasks are available under the `optimize` namespace:
 
 The `type` option allows to set the type of assets to optimize:
 
-    $ php symfony optimize:assets --type=stylesheet
-    $ php symfony optimize:assets --type=javascript
+    $ php symfony optimize:assets --type=stylesheets
+    $ php symfony optimize:assets --type=javascripts
     $ php symfony optimize:assets --type=png_images
 
 To optimize all assets in one call:
@@ -92,16 +116,52 @@ When optimized javascripts and css assets are generated, they aim to be used ins
       </body>
     </html>
 
-Note: Don't worry adding the `npOptimizer` helper to the `default_helpers` section of your `setting.yml` file, it will be automatically added at plugin configuration time.
+**Note1:** Obviously, the optimized assets **must** have been generated before with the task for this to work.
+
+**Note2:** Don't worry adding the `npOptimizer` helper to the `default_helpers` section of your `setting.yml` file, it will be automatically added at plugin configuration time.
 
 Advanced Configuration
 ----------------------
 
-TODO: work in progress
+If you want to manage asset optimization by yourself, just extend the corresponding optimizer class; for instance, if you want to compress and combine javascript files your way instead of JSMin or Google Closure, you'll have to extend the `npOptimizerJavascript` class and override its `optimizeFile()` method:
+
+    [php]
+    class myOptimizerJavascriptGoogleClosureAPI extends npOptimizerJavascript
+    {
+      public function optimizeFile($file)
+      {
+        $scriptContents = file_get_contents($file);
+        
+        // optimize javascript contents here...
+    
+        return $scriptContents;
+      }
+    }
+
+Don't forget to declare the new optimizer to use for javascript assets in your `app.yml` file. Here we'll take part of the environment feature of symfony and only configure the optimizer for the `prod` environment:
+
+    [yml]
+    prod:
+      np_assets_optimizer_plugin:
+        enabled: true
+        class: npAssetsOptimizerService
+        configuration:
+          javascript:
+            enabled: true
+            class: myOptimizerJavascriptGoogleClosureAPI
+            params:
+              destination: /js/optimized.js
+              files:
+                - jquery.js
+                - application.js
+
+Last, generate the new optimized javascript file with the `optimize:assets` task for the `prod` environment:
+
+    $ php symfony optimize:assets --type=javascripts --env=prod
 
 Credits
 -------
 
-This plugin is maintened by [Nicolas Perriault](http://prendreuncafe.com/).
+This plugin is maintened by [Nicolas Perriault](http://prendreuncafe.com/) <nperriault AT gmail DOT com>.
 
-This plugin and some part of the code it contains have been heavily inspired by Ryan Weaver's [ioCombinerPlugin](http://www.symfony-project.org/plugins/ioCombinerPlugin), many thanks to him for the great inspiration and discussions.
+Some parts of the code it contains have been heavily inspired by Ryan Weaver's [ioCombinerPlugin](http://www.symfony-project.org/plugins/ioCombinerPlugin), many thanks to him for the great inspiration and discussions.

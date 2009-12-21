@@ -13,12 +13,15 @@ class npAssetsOptimizerService
       'png_image' => array(
         'enabled' => false,
         'class' => 'nbOptimizerPngImage',
-        'params' => array(),
+        'params' => array(
+          'driver' => null,
+        ),
       ),
       'javascript' => array(
         'enabled' => false,
         'class' => 'npOptimizerJavascript',
         'params' => array(
+          'driver' => null,
           'files' => array(),
         ),
       ),
@@ -26,6 +29,7 @@ class npAssetsOptimizerService
         'enabled' => false,
         'class' => 'npOptimizerStylesheet',
         'params' => array(
+          'driver' => null,
           'files' => array(),
         ),
       ),
@@ -40,9 +44,9 @@ class npAssetsOptimizerService
    */
   public function __construct(sfEventDispatcher $dispatcher, array $configuration = array())
   {
-    $this->configuration = array_merge($this->configuration, $configuration);
-    
     $this->dispatcher = $dispatcher;
+    
+    $this->configuration = array_merge($this->configuration, $configuration);
   }
   
   /**

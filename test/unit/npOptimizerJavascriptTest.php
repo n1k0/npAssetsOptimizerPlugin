@@ -6,8 +6,12 @@ require dirname(__FILE__).'/../../lib/optimizer/javascript/npOptimizerJavascript
 
 $t = new lime_test(1, new lime_output_color());
 
-$webDir = sfConfig::get('sf_web_dir');
-
-// getJavascriptFilepath()
-$t->diag('getJavascriptFilepath()');
-$o = new npOptimizerJavascript();
+// optimizeFile()
+$t->diag('optimizeFile()');
+$o = new npOptimizerJavascript(new sfEventDispatcher(), array(
+  'driver' => 'jsmin',
+  'destination' => 'blah',
+  'files' => array(),
+));
+$jsFile = dirname(__FILE__).'/data/foo.js';
+$t->cmp_ok(strlen($o->optimizeFile($jsFile)), '<', filesize($jsFile), 'optimizeFile() optimizes js contents');

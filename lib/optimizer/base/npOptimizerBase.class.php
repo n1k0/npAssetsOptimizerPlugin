@@ -1,6 +1,7 @@
 <?php
 /**
- * npAssetsOptimizerPlugin base assets optimizer
+ * npAssetsOptimizerPlugin base assets optimizer. Every optimizer must derive from this 
+ * class and implement its abstract methods.
  *
  * @package     npAssetsOptimizerPlugin
  * @subpackage  optimizer
@@ -27,10 +28,11 @@ abstract class npOptimizerBase
   
   /**
    * Retrieves the absolute path to an asset from its symfony name, its associated extension
-   * and an optional web path
+   * and an optional web path. The asset file must reside on the local filesytem, foreign
+   * ones will be ignored (this might change with a dedicated option in the future).
    *
-   * @param  string  $asset      The symfony asset file name (ex. "main", "main.js", "/css/main.css")
-   * @param  string  $extension  The file extension (ex. "css", "js")
+   * @param  string  $asset      The symfony asset file name (eg. "main", "main.js", "/css/main.css")
+   * @param  string  $extension  The file extension (eg. "css", "js")
    * @param  string  $webPath    An optional web path for reconstructing the real 
    *                             path (always starting with the "/" character)
    *
@@ -58,40 +60,23 @@ abstract class npOptimizerBase
   abstract public function configure(array $configuration = array());
 
   /**
-   * Retrieves an asset file path from its symfony name
+   * Retrieves an asset file path from its symfony name (eg. "main", "main.js", "/css/main.css")
    *
    * @param  string  $file
    */
   abstract public function getAssetFilepath($file);
   
   /**
-   * Optimizes files
+   * Optimize assets
    *
-   * @return  array  Optimized files
-   *
-   * @throws RuntimeException
+   * @return array  The list of optimized files
    */
-  public function optimize()
-  {
-    $optimized = array();
-    
-    foreach ($this->files as $i => $file)
-    {
-      $optimized[] = $this->optimizeFile($file);
-    }
-    
-    if (!file_put_contents($optimizedFile = sprintf('%s%s', sfConfig::get('sf_web_dir'), $this->destination), implode('', $optimized)))
-    {
-      throw new RuntimeException(sprintf('Unable to write optimized and combined asset file "%s"', $optimizedFile));
-    }
-    
-    return (array) $optimizedFile;
-  }
+  abstract public function optimize();
   
   /**
-   * Optimizes a file
+   * Optimizes a single file
    *
-   * @param  string  $file  Tha asset file path
+   * @param  string  $file  The optimized asset file path
    */
   abstract public function optimizeFile($file);
   
@@ -106,7 +91,7 @@ abstract class npOptimizerBase
     {
       if (!file_exists($file) && !file_exists($files[$i] = $this->getAssetFilepath($file)))
       {
-        unset($files[$i]);
+        unset($files[$i]); // silently removes non-existent files
       }
     }
     

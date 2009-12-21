@@ -9,13 +9,15 @@ $webDir = sfConfig::get('sf_web_dir');
 
 class npOptimizerBaseTest extends npOptimizerBase
 {
+  public function configure(array $configuration = array()) { }
   public function getAssetFilepath($file) { return $file; }
+  public function optimize() { return array(); }
   public function optimizeFile($file) { return $file; }
 }
 
 // computeAssetFilepath()
 $t->diag('computeAssetFilepath()');
-$o = new npOptimizerBaseTest();
+$o = new npOptimizerBaseTest(new sfEventDispatcher());
 // js
 $t->is($o->computeAssetFilepath('main', 'js', '/js'), sprintf('%s/js/main.js', $webDir), 'computeAssetFilepath() retrieves js asset filepath');
 $t->is($o->computeAssetFilepath('main.js', 'js', '/js'), sprintf('%s/js/main.js', $webDir), 'computeAssetFilepath() retrieves js asset filepath');

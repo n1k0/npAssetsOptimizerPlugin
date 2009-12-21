@@ -55,6 +55,8 @@ class npOptimizerPngImage extends npOptimizerBase
   }
   
   /**
+   * Replaces PNG images by their enhanced versions.
+   *
    * @see npOptimizerBase
    */
   public function optimize()
@@ -103,7 +105,7 @@ class npOptimizerPngImage extends npOptimizerBase
     
     if (!count($output) || $return > 0)
     {
-      return null;
+      return null; // file has not been optimized
     }
     
     return $file;
