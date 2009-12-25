@@ -1,11 +1,21 @@
 <?php
 
-include dirname(__FILE__).'/../../../../test/bootstrap/unit.php';
-require dirname(__FILE__).'/../../lib/service/npAssetsOptimizerService.class.php';
+include dirname(__FILE__) . '/../../bootstrap/unit.php';
 
 $t = new lime_test(12, new lime_output_color());
 
 $dispatcher = new sfEventDispatcher();
+$baseAssetsDir = realpath($np_plugin_dir . '/test/data');
+
+if (file_exists($rm = sprintf('%s/css/my_optimized.css', $baseAssetsDir)))
+{
+  unlink($rm);
+}
+
+if (file_exists($rm = sprintf('%s/js/my_optimized.js', $baseAssetsDir)))
+{
+  unlink($rm);
+}
 
 // getOptimizer()
 $t->diag('getOptimizer()');
@@ -22,7 +32,7 @@ $service = new npAssetsOptimizerService($dispatcher, array(
       'destination' => '/bar',
     ),
   ),
-));
+), $baseAssetsDir);
 $t->isa_ok($service->getOptimizer('javascript'), 'npOptimizerJavascript', 'getOptimizer() retrieves correct js optimizer instance');
 $t->isa_ok($service->getOptimizer('stylesheet'), 'npOptimizerStylesheet', 'getOptimizer() retrieves correct css optimizer instance');
 
@@ -40,7 +50,7 @@ $service = new npAssetsOptimizerService($dispatcher, array(
       'destination' => '/bar',
     ),
   ),
-));
+), $baseAssetsDir);
 
 try
 {
@@ -78,7 +88,7 @@ $service = new npAssetsOptimizerService($dispatcher, array(
       'destination' => '/bar',
     ),
   ),
-));
+), $baseAssetsDir);
 
 $t->isa_ok($service->getOptimizer('javascript'), 'myNewOptimizerJavascript', 'getOptimizer() retrieves correct js optimizer instance');
 $t->isa_ok($service->getOptimizer('stylesheet'), 'myNewOptimizerStylesheet', 'getOptimizer() retrieves correct css optimizer instance');
@@ -96,15 +106,15 @@ $service = new npAssetsOptimizerService($dispatcher, array(
       ),
     ),
   ),
-));
+), $baseAssetsDir);
 try
 {
   $service->optimizeJavascripts();
-  $t->fail('optimizeJavascripts() cannot optimize unexistent files');
+  $t->pass('optimizeJavascripts() can optimize js files');
 }
 catch (RuntimeException $e)
 {
-  $t->pass('optimizeJavascripts() cannot optimize unexistent files');
+  $t->fail('optimizeJavascripts() can optimize js files');
 }
 
 // optimizeStylesheets()
@@ -120,15 +130,15 @@ $service = new npAssetsOptimizerService($dispatcher, array(
       ),
     ),
   ),
-));
+), $baseAssetsDir);
 try
 {
   $service->optimizeStylesheets();
-  $t->fail('optimizeStylesheets() cannot optimize unexistent files');
+  $t->pass('optimizeStylesheets() can optimize css files');
 }
 catch (RuntimeException $e)
 {
-  $t->pass('optimizeStylesheets() cannot optimize unexistent files');
+  $t->fail('optimizeStylesheets() can optimize css files');
 }
 
 // replaceJavascripts()
@@ -144,7 +154,7 @@ $service = new npAssetsOptimizerService($dispatcher, array(
       ),
     ),
   ),
-));
+), $baseAssetsDir);
 
 $response = new sfWebResponse($dispatcher, array());
 $response->addJavascript('foo.js');
@@ -166,7 +176,7 @@ $service = new npAssetsOptimizerService($dispatcher, array(
       ),
     ),
   ),
-));
+), $baseAssetsDir);
 
 $response = new sfWebResponse($dispatcher, array());
 $response->addStylesheet('foo.css');

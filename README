@@ -3,15 +3,16 @@ npAssetsOptimizerPlugin
 
 This plugin provides a task to optimize web assets used in your project, typically for better frontend performances:
 
- * CSS files will be combined and compressed with [cssmin](http://code.google.com/p/cssmin/)
- * Javascript files will be combined and compressed with [JSMin](http://github.com/rgrove/jsmin-php/), or alternatively using the [Google Closure Compiler API](http://code.google.com/intl/en_US/closure/compiler/docs/api-ref.html)
- * PNG web images will be optimized with [pngout](http://www.jonof.id.au/pngout) if avalaible on the system
+ * CSS files will be combined and compressed using  [cssmin](http://code.google.com/p/cssmin/) or the [Minify CSS Compressor](http://minify.googlecode.com/svn/trunk/min/lib/Minify/CSS/Compressor.php) library
+ * Javascript files will be combined and compressed using [JSMin](http://github.com/rgrove/jsmin-php/), [JSminPlus](http://crisp.tweakblogs.net/blog/cat/716) or the [Google Closure Compiler API](http://code.google.com/intl/en_US/closure/compiler/docs/api-ref.html)
+ * PNG web images will be optimized with [pngout](http://www.jonof.id.au/pngout), [advpng](http://advancemame.sourceforge.net/comp-readme.html) or [pngcrush](http://pmt.sourceforge.net/pngcrush/) if installed and available on the system
+ * Of course you can create your own optimization drivers
 
-Combined javascript and css files will then replace original ones in the response, with a timestamp appended as a GET parameter to force browsers to redownload them in case they're served with an `Expires` header and/or `304` HTTP status code, and if they've changed in the meanwhile.
+Combined javascript and css files will then replace original ones in the response, optionnaly with a timestamp appended as a GET parameter to force browsers to redownload them in case they're served with an `Expires` header and/or `304` HTTP status code, and if they've changed in the meanwhile.
 
 Of course, the optimizations made and their use is configurable by environments, so you can enable the call for optimized assets only in `prod` for example. Each optimization process can also be disabled. See the **Basic configuration** section of this document to find out how to do so.
 
-Everything is done by configuring some YAML by default, but the plugin architecture allows to easily extend the service and optimizers as well. See the **Advanced configuration** section of this document to find out how to do so.
+Everything is done by configuring some YAML by default, but the plugin architecture allows to easily extend the service and optimizers as well. See the **Advanced configuration** section of this document to find out how.
 
 Prerequisites
 -------------
@@ -24,7 +25,10 @@ Prerequisites
 ### Optional
 
  * PHP CURL extension enabled and available using the php command line for Google Closure Compiler support
- * The `pngout` binary executable available on the system ([get it here](http://www.jonof.id.au/pngout)) to optimize PNG images (btw, Windows family OSes are not currently supported for this task)
+ * Optionally, these PNG image optimization programs:
+   - `pngout` ([get it](http://www.jonof.id.au/pngout)) 
+   - `advpng` ([get it](http://advancemame.sourceforge.net/comp-readme.html)) 
+   - `pngcrush` ([get it](http://pmt.sourceforge.net/pngcrush/)) 
 
 Installation
 ------------
@@ -55,8 +59,9 @@ Basic configuration of assets optimization is done in the `np_assets_optimizer_p
             enabled: false                     # status of optimization
             class: npOptimizerJavascript       # the javascript optimizer class to use
             params:                            # optimizer class configuration
-              driver: jsmin                    # driver name (jsmin/google_closure_compiler)
+              driver: JSMin                    # javascript optimization driver name
               destination: /js/optimized.js    # destination path for optimized .js file
+              timestamp: true                  # adds a timestamp to the combined file url
               files:                           # list of js assets to optimize and combine
                 - jquery.js
                 - jquery-ui.js
@@ -65,7 +70,9 @@ Basic configuration of assets optimization is done in the `np_assets_optimizer_p
             enabled: false                     # status of optimization
             class: npOptimizerStylesheet       # the stylesheet optimizer class to use
             params:                            # optimizer class configuration
+              driver: Cssmin                   # stylesheet optimization driver name
               destination: /css/optimized.css  # destination path for optimized .css file
+              timestamp: true                  # adds a timestamp to the combined file url
               files:                           # list of css assets to optimize and combine
                 - /facebox/facebox.css
                 - main
@@ -74,10 +81,19 @@ Basic configuration of assets optimization is done in the `np_assets_optimizer_p
             enabled: false                     # status of optimization
             class: npOptimizerPngImage         # the PNG image optimizer class to use
             params:                            # optimizer class configuration
+              driver: Pngout                   # PNG image optimization driver name
               folders:                         # folders to scan for PNG files to optimize
                 - %SF_WEB_DIR%/images          # by default, contains the web/images folder
 
 **Note:** for the `files` section of both `javascript` and `stylesheet` optimizer configuration sections, the ordering of files is extremely important and should reflect the order used in your own `view.yml` files. Also, the very same syntax should be used: don't use `main.css` in the `app.yml` file where it's `main` in the `view.yml` one.
+
+### Available drivers
+
+For javascript: `JSMin`, `JSMinPlus` or `GoogleClosureCompilerAPI`.
+
+For stylesheets: `Cssmin` or `MinifyCssCompressor`.
+
+For PNG images: `Pngout`, `PngCrush` or `AdvPNG`.
 
 Usage
 -----
@@ -88,9 +104,9 @@ Assets optimization tasks are available under the `optimize` namespace:
 
 The `type` option allows to set the type of assets to optimize:
 
-    $ php symfony optimize:assets --type=stylesheets
-    $ php symfony optimize:assets --type=javascripts
-    $ php symfony optimize:assets --type=png_images
+    $ php symfony optimize:assets --type=stylesheet
+    $ php symfony optimize:assets --type=javascript
+    $ php symfony optimize:assets --type=png_image
 
 To optimize all assets in one call:
 
@@ -125,22 +141,31 @@ When optimized javascripts and css assets are generated, they aim to be used ins
 Advanced Configuration
 ----------------------
 
-If you want to manage asset optimization by yourself, just extend the corresponding optimizer class; for instance, if you want to compress and combine javascript files your way instead of JSMin or Google Closure, you'll have to extend the `npOptimizerJavascript` class and override its `optimizeFile()` method:
+If you want to manage asset optimization by yourself, just extend the corresponding optimizer class; for instance, if you want to compress and combine javascript files your way instead of JSMin, JSminPlus or Google Closure Compiler ones, you can write your own driver by extending the `npDriverBase` class and implementing its abstract `doProcessFile($file, $replace = false)` method:
 
     [php]
-    class myOptimizerJavascript extends npOptimizerJavascript
+    class npDriverMyDriver extends npDriverBase
     {
-      public function optimizeFile($file)
+      public function doProcessFile($file, $replace = false)
       {
-        $scriptContents = file_get_contents($file);
-        
         // optimize javascript contents here...
     
-        return $scriptContents;
+        if ($replace)
+        {
+          // replace file here
+          
+          return $file;
+        }
+        else
+        {
+          // fetch optimized contents from $file and return it
+          
+          return $optimizedContents;
+        }
       }
     }
 
-Don't forget to declare the new optimizer to use for javascript assets in your `app.yml` file. Here we'll take part of the environment feature of symfony and only configure the optimizer for the `prod` environment:
+Don't forget to declare the new driver to use for javascript assets in your `app.yml` file. Here we'll take part of the environment feature of symfony and only configure the optimizer for the `prod` environment:
 
     [yml]
     prod:
@@ -150,16 +175,38 @@ Don't forget to declare the new optimizer to use for javascript assets in your `
         configuration:
           javascript:
             enabled: true
-            class: myOptimizerJavascript
+            class: npOptimizerJavascript
             params:
+              driver: myDriver
               destination: /js/optimized.js
+              timestamp: false
               files:
                 - jquery.js
                 - application.js
 
 Last, generate the new optimized javascript file with the `optimize:assets` task for the `prod` environment:
 
-    $ php symfony optimize:assets --type=javascripts --env=prod
+    $ php symfony optimize:assets --type=javascript --env=prod
+
+Changelog
+---------
+
+### v0.8.0 - 2009-12-25 (yes, x-mas release!)
+
+ * **BC BREAK:** The accepted `type` options of the `optimize:assets` tasks have been renamed and are now `all`, `javascript`, `stylesheet` and `png_image`
+ * **BC BREAK:** Refactored drivers management, they now have their own classes
+ * Added `JSMinPlus` javascript optimization driver, based on [JSminPlus](http://crisp.tweakblogs.net/blog/cat/716)
+ * **BC BREAK:** Driver names now reflects the driver class name: 
+   - `JSMin` driver will use the `npDriverJSMin` class
+   - `JSMinPlus` driver will use the `npDriverJSMinPlus` class
+   - `GoogleClosureCompilerAPI` driver will use the `npDriverGoogleClosureCompilerAPI` class
+ * Added `MinifyCssCompressor` stylesheet optimization driver, based on [Minify](http://minify.googlecode.com/svn/trunk/min/lib/Minify/CSS/Compressor.php)
+ * Added `AdvPNG` and `PngCrush` PNG optimization drivers
+ * Added more unit tests
+
+### v0.6.0 - 2009-12-21
+
+ * Initial release
 
 Credits
 -------

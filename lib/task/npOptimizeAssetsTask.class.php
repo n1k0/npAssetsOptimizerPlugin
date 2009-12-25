@@ -8,7 +8,7 @@
  */
 class npOptimizeAssetsTask extends sfBaseTask
 {
-  static protected $types = array('all', 'png_images', 'javascripts', 'stylesheets');
+  static protected $types = array('all', 'javascript', 'png_image', 'stylesheet');
   
   protected $optimizer = null;
   
@@ -35,72 +35,72 @@ class npOptimizeAssetsTask extends sfBaseTask
   {
     $configuration = sfConfig::get('app_np_assets_optimizer_plugin_configuration', array());
     
-    $this->optimizer = new npAssetsOptimizerService($this->dispatcher, $configuration);
+    $this->optimizerService = new npAssetsOptimizerService($this->dispatcher, $configuration);
     
-    $this->logSection('optimize', $options['type']);
+    $this->logSection('optimizing', $options['type']);
     
-    switch ($options['type'])
+    if (!in_array($options['type'], self::$types))
     {
-      case 'all':
-        $this->optimizePngImages();
-        $this->optimizeJavascripts();
-        $this->optimizeStylesheets();
-        break;
-      case 'png_images':
-        $this->optimizePngImages();
-        break;
-      case 'javascripts':
-        $this->optimizeJavascripts();
-        break;
-      case 'stylesheets':
-        $this->optimizeStylesheets();
-        break;
-      default:
-        throw new Exception(sprintf('Unsupported optimization type "%s"; available types are: %s', $options['type'], implode(', ', self::$types)));
-        break;
+      throw new Exception(sprintf('Unsupported optimization type "%s"; available types are: %s', $options['type'], implode(', ', self::$types)));
     }
-  }
-  
-  public function optimizePngImages()
-  {
-    $this->logSection('png_images', 'Optimizing PNG images (this can take a while...)');
-    
-    $this->logSection('png_images', sprintf('Optimized %d PNG images', count($this->optimizer->optimizePngImages())));
-  }
-  
-  public function optimizeJavascripts()
-  {
-    $this->logSection('javascripts', 'Optimizing javascripts (this can take a while...)');
-    
-    $files = $this->optimizer->optimizeJavascripts();
-    
-    $generated = str_replace(sfConfig::get('sf_web_dir'), 'web', $file = array_pop($files));
-
-    if ($file)
+    if ('all' === $options['type'])
     {
-      $this->logSection('javascripts', sprintf('Optimized javascript generated in %s (%d b.)', $generated, filesize($file)));
+      foreach (self::$types as $type)
+      {
+        if ('all' !== $type)
+        {
+          $this->optimize($type);
+        }
+      }
     }
     else
     {
-      $this->logSection('javascripts', 'No optimization made');
+      $this->optimize($options['type']);
     }
   }
   
-  public function optimizeStylesheets()
+  public function optimize($type)
   {
-    $this->logSection('stylesheets', 'Optimizing stylesheets (this can take a while...)');
+    $optimizer = $this->optimizerService->getOptimizer($type);
     
-    $files = $this->optimizer->optimizeStylesheets();
+    $this->logSection($type, sprintf('Optimizing %ss using "%s" driver (this can take a while...)', $type, $optimizer->getDriverName()));
     
-    $generated = str_replace(sfConfig::get('sf_web_dir'), 'web', $file = array_pop($files));
-
-    if ($file)
+    $this->logResults($type, $optimizer->optimize());
+  }
+  
+  protected function logResults($section, array $results = array())
+  {
+    if (!isset($results['statistics']))
     {
-      $this->logSection('stylesheets', sprintf('Optimized stylesheet generated in %s (%d b.)', $generated, filesize($file)));
+      throw new RuntimeException('No statistics have been generated');
+    }
+    
+    foreach ($results['statistics'] as $file => $statistic)
+    {
+      if (100 === (int) $statistic['ratio'])
+      {
+        $this->logSection($section, sprintf('already optimized: %s', $this->formatTaskFilePath($file)));
+      }
+      else
+      {
+        $this->logSection($section, sprintf('packed %s: %s', $statistic['ratio'].'%', $this->formatTaskFilePath($file)));
+      }
+    }
+    
+    if (isset($results['generatedFile']))
+    {
+      $generated = $this->formatTaskFilePath($results['generatedFile']);
+      
+      $this->logSection($section, sprintf('Optimized combined asset generated in %s (%db.)', $generated, filesize($results['generatedFile'])));
     }
     else
     {
-      $this->logSection('stylesheets', 'No optimization made');
+      $this->logSection($section, 'No optimization made');
     }
+  }
+  
+  protected function formatTaskFilePath($assetPath)
+  {
+    return str_replace(sfConfig::get('sf_web_dir'), 'web', $assetPath);
   }
 }

@@ -13,6 +13,8 @@ class npOptimizerPngImage extends npOptimizerBase
    */
   public function configure(array $configuration = array())
   {
+    parent::configure($configuration);
+    
     if (isset($configuration['files']))
     {
       parent::setFiles($configuration['files']);
@@ -23,8 +25,11 @@ class npOptimizerPngImage extends npOptimizerBase
     }
     else
     {
-      throw new InvalidArgumentException('You must define either a "files" or a "folder" option to use this optimizer');
+      throw new sfConfigurationException('You must define either a "files" or a "folders" option to use this optimizer');
     }
+    
+    // PNG images will be replaced by their optimized versions
+    $this->replaceFiles = true;
   }
   
   /**
@@ -55,59 +60,10 @@ class npOptimizerPngImage extends npOptimizerBase
   }
   
   /**
-   * Replaces PNG images by their enhanced versions.
-   *
-   * @see npOptimizerBase
-   */
-  public function optimize()
-  {
-    $optimized = array();
-    
-    foreach ($this->files as $file)
-    {
-      if (!file_exists($file))
-      {
-        throw new RuntimeException(sprintf('File %s does not exist', $file));
-      }
-      
-      if (null !== $this->optimizeFile($file))
-      {
-        $optimized[] = $optimizedFile;
-      }
-    }
-    
-    return $optimized;
-  }
-  
-  /**
    * @see npOptimizerBase
    */
   public function getAssetFilepath($file)
   {
-    return $file; // TODO
-  }
-  
-  /**
-   * Optimizes a PNG image using PNGOut if available on the system
-   *
-   * @see http://www.jonof.id.au/pngout
-   */
-  public function optimizeFile($file)
-  {
-    exec('which pngout', $output, $return);
-    
-    if (!count($output) || $return > 0)
-    {      
-      throw new RuntimeException('The pngout program is not available nor accessible by php');
-    }
-    
-    exec(sprintf('pngout %s 2>/dev/null', escapeshellarg($file)), $output, $return);
-    
-    if (!count($output) || $return > 0)
-    {
-      return null; // file has not been optimized
-    }
-    
     return $file;
   }
 }

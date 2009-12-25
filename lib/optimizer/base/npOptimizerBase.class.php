@@ -9,22 +9,40 @@
  */
 abstract class npOptimizerBase
 {
-  protected 
-    $dispatcher = null,
-    $files      = array();
+  protected
+    $baseAssetsDir = null,
+    $driver        = null,
+    $driverName    = null,
+    $dispatcher    = null,
+    $files         = array(),
+    $replaceFiles  = false;
   
   /**
    * Public constructor
    *
    * @param  sfEventDispatcher  $dispatcher     An event dispatcher instance
    * @param  array              $configuration  Optimizer configuration
+   * @param  string|null        $baseAssetsDir  Base assets directory
    */
-  public function __construct(sfEventDispatcher $dispatcher, array $configuration = array())
+  public function __construct(sfEventDispatcher $dispatcher, array $configuration, $baseAssetsDir)
   {
+    $this->baseAssetsDir = $baseAssetsDir;
+    
     $this->dispatcher = $dispatcher;
     
     $this->configure($configuration);
+    
+    $this->dispatcher->notify(new sfEvent($this, 'optimizer.post_configure', array(
+      'configuration' => $configuration,
+    )));
   }
+  
+  /**
+   * Retrieves an asset file path from its symfony name (eg. "main", "main.js", "/css/main.css")
+   *
+   * @param  string  $file
+   */
+  abstract public function getAssetFilepath($file);
   
   /**
    * Retrieves the absolute path to an asset from its symfony name, its associated extension
@@ -49,7 +67,7 @@ abstract class npOptimizerBase
     
     $fileName = preg_match(sprintf('/\.%s$/i', $extension), $asset) ? $asset : sprintf('%s.%s', $asset, $extension);
     
-    return sprintf('%s%s%s', sfConfig::get('sf_web_dir'), $webPath, $fileName);
+    return sprintf('%s%s%s', $this->baseAssetsDir, $webPath, $fileName);
   }
   
   /**
@@ -57,33 +75,91 @@ abstract class npOptimizerBase
    *
    * @param  array  $configuration
    */
-  abstract public function configure(array $configuration = array());
+  public function configure(array $configuration = array())
+  {
+    if (!isset($configuration['driver']))
+    {
+      throw new sfConfigurationException('No optimization driver name specified');
+    }
+    
+    $this->driverName = $configuration['driver'];
+    
+    $driverClass = sprintf('npDriver%s', $this->driverName);
+    
+    if (!class_exists($driverClass, true) || !in_array('npDriverBase', class_parents($driverClass)))
+    {
+      throw new sfConfigurationException(sprintf('Driver class "%s" does not exist or extends npDriverBase', $driverClass));
+    }
+    
+    $this->driver = new $driverClass(isset($configuration['driverOptions']) ? $configuration['driverOptions'] : array());
+  }
 
   /**
-   * Retrieves an asset file path from its symfony name (eg. "main", "main.js", "/css/main.css")
+   * Retrieves an optimization driver instance
    *
-   * @param  string  $file
+   * @return npDriverBase
    */
-  abstract public function getAssetFilepath($file);
+  public function getDriver()
+  {
+    return $this->driver;
+  }
   
   /**
-   * Optimize assets
+   * Retrieves current optimization driver name
    *
-   * @return array  The list of optimized files
+   * @return string
    */
-  abstract public function optimize();
+  public function getDriverName()
+  {
+    return $this->driverName;
+  }
+  
+  /**
+   * Optimizes all files
+   *
+   * @return  array  The list of resulting optimized files
+   *
+   * @throws RuntimeException if a problem occurs
+   */
+  public function optimize()
+  {
+    if (!count($this->files))
+    {
+      throw new RuntimeException(sprintf('No files to optimize'));
+    }
+    
+    $results = array();
+
+    foreach ($this->files as $file)
+    {
+      $results[$file] = $this->optimizeFile($file);
+    }
+    
+    return array('statistics' => $results);
+  }
   
   /**
    * Optimizes a single file
    *
-   * @param  string  $file  The optimized asset file path
+   * @param  string   $file     The optimized asset file path
+   *
+   * @return array  Optimization results
    */
-  abstract public function optimizeFile($file);
+  public function optimizeFile($file)
+  {
+    return $this->getDriver($this->driver)
+      ->reset()
+      ->processFile($file, $this->replaceFiles)
+      ->getResults()
+    ;
+  }
   
   /**
    * Sets files to process
    *
    * @param  array  $files
+   *
+   * @throws RuntimeException  if a file doesn't exist or can't be resolved
    */
   public function setFiles(array $files = array())
   {
@@ -91,7 +167,7 @@ abstract class npOptimizerBase
     {
       if (!file_exists($file) && !file_exists($files[$i] = $this->getAssetFilepath($file)))
       {
-        unset($files[$i]); // silently removes non-existent files
+        throw new RuntimeException(sprintf('File "%s" does not exist or cannot be resolved (tried "%s" as well)', $file, $files[$i]));
       }
     }
     

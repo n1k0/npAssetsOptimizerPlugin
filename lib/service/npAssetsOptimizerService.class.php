@@ -9,44 +9,50 @@
 class npAssetsOptimizerService
 {
   protected
+    $baseAssetsDir = null,
     $configuration = array(
       'png_image' => array(
         'enabled' => false,
-        'class' => 'nbOptimizerPngImage',
+        'class' => 'npOptimizerPngImage',
         'params' => array(
-          'driver' => null,
+          'driver' => 'Pngout',
         ),
       ),
       'javascript' => array(
         'enabled' => false,
         'class' => 'npOptimizerJavascript',
         'params' => array(
-          'driver' => null,
+          'driver' => 'JSMin',
           'files' => array(),
+          'destination' => '/js/optimized.js',
         ),
       ),
       'stylesheet' => array(
         'enabled' => false,
         'class' => 'npOptimizerStylesheet',
         'params' => array(
-          'driver' => null,
+          'driver' => 'Cssmin',
           'files' => array(),
+          'destination' => '/css/optimized.css',
         ),
       ),
     ),
-    $dispatcher = null;
+    $dispatcher    = null;
   
   /**
    * Public constructor
    *
    * @param  sfEventDispatcher  $dispatcher
    * @param  array              $configuration
+   * @param  string|null        $baseAssetsDir  Base assets directory
    */
-  public function __construct(sfEventDispatcher $dispatcher, array $configuration = array())
+  public function __construct(sfEventDispatcher $dispatcher, array $configuration = array(), $baseAssetsDir = null)
   {
     $this->dispatcher = $dispatcher;
     
-    $this->configuration = array_merge($this->configuration, $configuration);
+    $this->configuration = sfToolkit::arrayDeepMerge($this->configuration, $configuration);
+    
+    $this->baseAssetsDir = null !== $baseAssetsDir ? $baseAssetsDir : sfConfig::get('sf_web_dir');
   }
   
   /**
@@ -111,7 +117,7 @@ class npAssetsOptimizerService
       $response->removeJavascript($file);
     }
     
-    $response->addJavascript($this->getOptimizer('javascript')->generateTimestampedAssetName(), 'first');
+    $response->addJavascript($this->getOptimizer('javascript')->getOptimizedFileWebPath(), 'first');
   }
   
   /**
@@ -131,7 +137,7 @@ class npAssetsOptimizerService
       $response->removeStylesheet($file);
     }
     
-    $response->addStylesheet($this->getOptimizer('stylesheet')->generateTimestampedAssetName(), 'first');
+    $response->addStylesheet($this->getOptimizer('stylesheet')->getOptimizedFileWebPath(), 'first');
   }
   
   /**
@@ -157,6 +163,6 @@ class npAssetsOptimizerService
       throw new sfConfigurationException(sprintf('Optimizer class "%s" does not exist nor extends the npOptimizerBase class. Please checkout the documentation.', $className));
     }
     
-    return new $className($this->dispatcher, $this->configuration[$type]['params']);
+    return new $className($this->dispatcher, $this->configuration[$type]['params'], $this->baseAssetsDir);
   }
 }

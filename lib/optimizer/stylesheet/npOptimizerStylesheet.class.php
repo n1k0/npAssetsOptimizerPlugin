@@ -8,9 +8,6 @@
  */
 class npOptimizerStylesheet extends npOptimizerCombinableBase
 {
-  protected 
-    $destination = '/css/optimized.css';
-  
   /**
    * @see npOptimizerBase
    */
@@ -22,10 +19,16 @@ class npOptimizerStylesheet extends npOptimizerCombinableBase
   /**
    * Optimizes a stylesheet file
    *
-   * @see npOptimizerBase
+   * @param  string  $file  The path to stylesheet file
+   *
+   * @return array  Optimization results
    */
   public function optimizeFile($file)
   {
-    return cssmin::minify(file_get_contents($file));
+    return parent::getDriver($this->driver)
+      ->reset()
+      ->processFile($file, false)
+      ->getResults()
+    ;
   }
 }

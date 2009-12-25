@@ -9,11 +9,17 @@
  */
 abstract class npOptimizerCombinableBase extends npOptimizerBase
 {
+  protected 
+    $destination = null,
+    $timestamp   = false;
+  
   /**
    * @see npOptimizerBase
    */
   public function configure(array $configuration = array())
   {
+    parent::configure($configuration);
+    
     if (isset($configuration['files']))
     {
       parent::setFiles($configuration['files']);
@@ -25,6 +31,13 @@ abstract class npOptimizerCombinableBase extends npOptimizerBase
     }
     
     $this->destination = $configuration['destination'];
+    
+    if (isset($configuration['timestamp']))
+    {
+      $this->timestamp = $configuration['timestamp'];
+    }
+    
+    $this->replaceFiles = false;
   }
   
   /**
@@ -34,7 +47,7 @@ abstract class npOptimizerCombinableBase extends npOptimizerBase
    */
   public function getOptimizedFileSystemPath()
   {
-    return sprintf('%s/%s', sfConfig::get('sf_web_dir'), $this->destination);
+    return realpath(sprintf('%s/%s', $this->baseAssetsDir, $this->destination));
   }
   
   /**
@@ -44,7 +57,14 @@ abstract class npOptimizerCombinableBase extends npOptimizerBase
    */
   public function getOptimizedFileWebPath()
   {
-    return $this->destination;
+    if (true === $this->timestamp)
+    {
+      return $this->generateTimestampedAssetName();
+    }
+    else
+    {
+      return $this->destination;
+    }
   }
   
   /**
@@ -57,10 +77,10 @@ abstract class npOptimizerCombinableBase extends npOptimizerBase
   {
     if (file_exists($filePath = $this->getOptimizedFileSystemPath()))
     {
-      return sprintf('%s?%d', $this->getOptimizedFileWebPath(), filemtime($filePath));
+      return sprintf('%s?%d', $this->destination, filemtime($filePath));
     }
     
-    return $this->getOptimizedFileWebPath();
+    return $this->destination;
   }
   
   /**
@@ -72,29 +92,25 @@ abstract class npOptimizerCombinableBase extends npOptimizerBase
    */
   public function optimize()
   {
-    if (!count($this->files))
+    $results = parent::optimize();
+    
+    $optimizedContents = '';
+    
+    foreach ($results['statistics'] as $file => $statistic)
     {
-      throw new RuntimeException(sprintf('No files to optimize'));
+      $optimizedContents .= $statistic['optimizedContent'];
     }
-    
-    $optimized = array();
-    
-    foreach ($this->files as $file)
-    {
-      $optimized[] = $this->optimizeFile($file);
-    }
-    
-    $optimizedContents = implode('', $optimized);
     
     if (empty($optimizedContents))
     {
       throw new RuntimeException('Empty optimized contents!');
     }
-    if (!file_put_contents($optimizedFile = sprintf('%s%s', sfConfig::get('sf_web_dir'), $this->destination), $optimizedContents))
+    
+    if (!file_put_contents($optimizedFile = sprintf('%s%s', $this->baseAssetsDir, $this->destination), $optimizedContents))
     {
       throw new RuntimeException(sprintf('Unable to write optimized and combined asset file "%s"', $optimizedFile));
     }
     
-    return (array) $optimizedFile; // an array containing the path to the combined file
+    return array_merge($results, array('generatedFile' => $optimizedFile));
   }
 }
