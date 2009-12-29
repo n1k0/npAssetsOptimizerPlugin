@@ -101,43 +101,45 @@ class npAssetsOptimizerService
   }
   
   /**
-   * Replaces response original javascripts by optimized ones
+   * Replaces response original javascripts by optimized ones (only if javascript 
+   * optimization has been enabled by configuration)
    *
    * @param  sfWebresponse  $response
    */
   public function replaceJavascripts(sfWebResponse $response)
   {
-    if (!$this->configuration['javascript']['enabled'])
+    if (is_null($javascriptOptimizer = $this->getOptimizer('javascript')))
 	  {
 	    return;
     }
 
-    foreach ($this->configuration['javascript']['params']['files'] as $file)
+    foreach ($javascriptOptimizer->getAssetFiles() as $file)
     {
       $response->removeJavascript($file);
     }
     
-    $response->addJavascript($this->getOptimizer('javascript')->getOptimizedFileWebPath(), 'first');
+    $response->addJavascript($javascriptOptimizer->getOptimizedFileWebPath(), 'first');
   }
   
   /**
-   * Replaces response original stylesheets by optimized ones
+   * Replaces response original stylesheets by optimized ones (only if stylesheet 
+   * optimization has been enabled by configuration)
    *
    * @param  sfWebresponse  $response
    */
   public function replaceStylesheets(sfWebResponse $response)
   {
-    if (!$this->configuration['stylesheet']['enabled'])
+    if (is_null($stylesheetOptimizer = $this->getOptimizer('stylesheet')))
 	  {
 	    return;
     }
 
-    foreach ($this->configuration['stylesheet']['params']['files'] as $file)
+    foreach ($stylesheetOptimizer->getAssetFiles() as $file)
     {
       $response->removeStylesheet($file);
     }
     
-    $response->addStylesheet($this->getOptimizer('stylesheet')->getOptimizedFileWebPath(), 'first');
+    $response->addStylesheet($stylesheetOptimizer->getOptimizedFileWebPath(), 'first');
   }
   
   /**
@@ -145,7 +147,7 @@ class npAssetsOptimizerService
    *
    * @param  string  $type  The optimizer type
    *
-   * @return npOptimizerBase
+   * @return npOptimizerBase|null
    *
    * @throws sfConfigurationException
    */
@@ -154,6 +156,11 @@ class npAssetsOptimizerService
     if (!in_array($type, $supported = array_keys($this->configuration)))
     {
       throw new sfConfigurationException(sprintf('Optimizer type "%s" is not supported. Available and supported types are %s', $type, implode(', ', $supported)));
+    }
+    
+    if (false === $this->configuration[$type]['enabled'])
+    {
+      return null;
     }
     
     $className = $this->configuration[$type]['class'];

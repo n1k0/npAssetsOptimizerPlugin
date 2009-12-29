@@ -10,6 +10,7 @@
 abstract class npOptimizerBase
 {
   protected
+    $assetFiles    = array(),
     $baseAssetsDir = null,
     $driver        = null,
     $driverName    = null,
@@ -43,6 +44,16 @@ abstract class npOptimizerBase
    * @param  string  $file
    */
   abstract public function getAssetFilepath($file);
+  
+  /**
+   * Retrieves the original configured list of asset files to process
+   *
+   * @return array
+   */
+  public function getAssetFiles()
+  {
+    return $this->assetFiles;
+  }
   
   /**
    * Retrieves the absolute path to an asset from its symfony name, its associated extension
@@ -115,6 +126,16 @@ abstract class npOptimizerBase
   }
   
   /**
+   * Retrieves the list of files to process
+   *
+   * @return array
+   */
+  public function getFiles()
+  {
+    return $this->files;
+  }
+  
+  /**
    * Optimizes all files
    *
    * @return  array  The list of resulting optimized files
@@ -163,6 +184,8 @@ abstract class npOptimizerBase
    */
   public function setFiles(array $files = array())
   {
+    $this->assetFiles = $files;
+    
     foreach ($files as $i => $file)
     {
       if (!file_exists($file) && !file_exists($files[$i] = $this->getAssetFilepath($file)))

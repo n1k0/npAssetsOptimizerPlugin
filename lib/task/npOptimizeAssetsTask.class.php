@@ -17,8 +17,11 @@ class npOptimizeAssetsTask extends sfBaseTask
    */
   public function configure()
   {
+    $this->addArguments(array(
+      new sfCommandArgument('application', sfCommandArgument::REQUIRED, 'The application name'),
+    ));
+    
     $this->addOptions(array(
-      new sfCommandOption('application', null, sfCommandOption::PARAMETER_REQUIRED, 'The application name', 'frontend'),
       new sfCommandOption('env', null, sfCommandOption::PARAMETER_REQUIRED, 'The environment name', 'dev'),
       new sfCommandOption('type', null, sfCommandOption::PARAMETER_REQUIRED, sprintf('The type of assets to optimize (%s)', implode(', ', self::$types)), $default = 'all'),
     ));
@@ -33,9 +36,9 @@ class npOptimizeAssetsTask extends sfBaseTask
    */
   public function execute($arguments = array(), $options = array())
   {
-    $configuration = sfConfig::get('app_np_assets_optimizer_plugin_configuration', array());
+    $serviceConfiguration = sfConfig::get('app_np_assets_optimizer_plugin_configuration', array());
     
-    $this->optimizerService = new npAssetsOptimizerService($this->dispatcher, $configuration);
+    $this->optimizerService = new npAssetsOptimizerService($this->dispatcher, $serviceConfiguration);
     
     $this->logSection('optimizing', $options['type']);
     
@@ -61,7 +64,13 @@ class npOptimizeAssetsTask extends sfBaseTask
   
   public function optimize($type)
   {
-    $optimizer = $this->optimizerService->getOptimizer($type);
+    if (is_null($optimizer = $this->optimizerService->getOptimizer($type)))
+    {
+      $this->logSection('skipped', sprintf('%s optimization service is disabled for the "%s" env.', 
+                                           ucfirst($type), $this->configuration->getEnvironment()), null, 'COMMENT');
+      
+      return;
+    }
     
     $this->logSection($type, sprintf('Optimizing %ss using "%s" driver (this can take a while...)', $type, $optimizer->getDriverName()));
     

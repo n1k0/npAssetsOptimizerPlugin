@@ -85,6 +85,8 @@ Basic configuration of assets optimization is done in the `np_assets_optimizer_p
               folders:                         # folders to scan for PNG files to optimize
                 - %SF_WEB_DIR%/images          # by default, contains the web/images folder
 
+Just create your own `np_assets_optimizer_plugin` in your application `app.yml` file to override these default settings.
+
 **Note:** for the `files` section of both `javascript` and `stylesheet` optimizer configuration sections, the ordering of files is extremely important and should reflect the order used in your own `view.yml` files. Also, the very same syntax should be used: don't use `main.css` in the `app.yml` file where it's `main` in the `view.yml` one.
 
 ### Available drivers
@@ -98,19 +100,23 @@ For PNG images: `Pngout`, `PngCrush` or `AdvPNG`.
 Usage
 -----
 
-Assets optimization tasks are available under the `optimize` namespace:
+When you're done with configuration, you can launch the assets optimization task, which is available under the `optimize` namespace:
 
     $ php symfony list optimize
 
-The `type` option allows to set the type of assets to optimize:
+The `application` argument is mandatory, whereas the `type` option allows to set the type of assets to optimize:
 
-    $ php symfony optimize:assets --type=stylesheet
-    $ php symfony optimize:assets --type=javascript
-    $ php symfony optimize:assets --type=png_image
+    $ php symfony optimize:assets frontend --type=stylesheet
+    $ php symfony optimize:assets frontend --type=javascript
+    $ php symfony optimize:assets frontend --type=png_image
 
 To optimize all assets in one call:
 
     $ php symfony optimize:assets --type=all
+
+To get full help on how to use this task, just lauch:
+
+    $ php symfony help optimize:assets
 
 These tasks **must be executed manually** every time you make one of these changes:
 
@@ -158,7 +164,7 @@ If you want to manage asset optimization by yourself, just extend the correspond
         }
         else
         {
-          // fetch optimized contents from $file and return it
+          // fetch contents from $file, optimize it, and return it
           
           return $optimizedContents;
         }
@@ -186,10 +192,18 @@ Don't forget to declare the new driver to use for javascript assets in your `app
 
 Last, generate the new optimized javascript file with the `optimize:assets` task for the `prod` environment:
 
-    $ php symfony optimize:assets --type=javascript --env=prod
+    $ php symfony optimize:assets frontend --type=javascript --env=prod
 
 Changelog
 ---------
+
+### v0.8.1 - 2009-12-29
+
+ * **BC BREAK:** added a mandatory `application` argument to the `assets:optimize` task, to avoid processing assets optimization from the wrong application configuration
+ * fixed a bug which prevent to understand the `enabled` configuration setting for optimizers
+ * fixed a typo in the file name of the `npDriverAdvPNG` class
+
+Many thanks to [Pascal Borreli](http://borreli.com/) for the bug reports.
 
 ### v0.8.0 - 2009-12-25 (yes, x-mas release!)
 
@@ -211,6 +225,6 @@ Changelog
 Credits
 -------
 
-This plugin is maintened by [Nicolas Perriault](http://prendreuncafe.com/) <nperriault AT gmail DOT com>.
+This plugin is maintened by [Nicolas Perriault](http://prendreuncafe.com/). Patches and feedback are welcome, send them to `nperriault` at `gmail` dot com.
 
 Some parts of the code it contains have been heavily inspired by Ryan Weaver's [ioCombinerPlugin](http://www.symfony-project.org/plugins/ioCombinerPlugin), many thanks to him for the great inspiration and discussions.

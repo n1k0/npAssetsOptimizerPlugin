@@ -2,7 +2,7 @@
 
 include dirname(__FILE__) . '/../../bootstrap/unit.php';
 
-$t = new lime_test(12, new lime_output_color());
+$t = new lime_test(14, new lime_output_color());
 
 $dispatcher = new sfEventDispatcher();
 $baseAssetsDir = realpath($np_plugin_dir . '/test/data');
@@ -21,12 +21,14 @@ if (file_exists($rm = sprintf('%s/js/my_optimized.js', $baseAssetsDir)))
 $t->diag('getOptimizer()');
 $service = new npAssetsOptimizerService($dispatcher, array(
   'javascript' => array(
+    'enabled' => true,
     'class' => 'npOptimizerJavascript',
     'params' => array(
       'destination' => '/foo',
     ),
   ),
   'stylesheet' => array(
+    'enabled' => true,
     'class' => 'npOptimizerStylesheet',
     'params' => array(
       'destination' => '/bar',
@@ -36,15 +38,35 @@ $service = new npAssetsOptimizerService($dispatcher, array(
 $t->isa_ok($service->getOptimizer('javascript'), 'npOptimizerJavascript', 'getOptimizer() retrieves correct js optimizer instance');
 $t->isa_ok($service->getOptimizer('stylesheet'), 'npOptimizerStylesheet', 'getOptimizer() retrieves correct css optimizer instance');
 
+// Disabled optimizer
+$service = new npAssetsOptimizerService($dispatcher, array(
+  'javascript' => array(
+    'enabled' => false,
+    'class' => 'npOptimizerJavascript',
+    'params' => array(
+    ),
+  ),
+  'stylesheet' => array(
+    'enabled' => false,
+    'class' => 'npOptimizerStylesheet',
+    'params' => array(
+    ),
+  ),
+), $baseAssetsDir);
+$t->is($service->getOptimizer('javascript'), null, 'getOptimizer() retrieves a null if js optimizer is disabed by configuration');
+$t->is($service->getOptimizer('stylesheet'), null, 'getOptimizer() retrieves a null if css optimizer is disabed by configuration');
+
 // Custom optimizers
 $service = new npAssetsOptimizerService($dispatcher, array(
   'javascript' => array(
+    'enabled' => true,
     'class' => 'myOptimizerJavascript',
     'params' => array(
       'destination' => '/foo',
     ),
   ),
   'stylesheet' => array(
+    'enabled' => true,
     'class' => 'myOptimizerStylesheet',
     'params' => array(
       'destination' => '/bar',
@@ -77,12 +99,14 @@ class myNewOptimizerStylesheet extends npOptimizerStylesheet {}
 
 $service = new npAssetsOptimizerService($dispatcher, array(
   'javascript' => array(
+    'enabled' => true,
     'class' => 'myNewOptimizerJavascript',
     'params' => array(
       'destination' => '/foo',
     ),
   ),
   'stylesheet' => array(
+    'enabled' => true,
     'class' => 'myNewOptimizerStylesheet',
     'params' => array(
       'destination' => '/bar',
