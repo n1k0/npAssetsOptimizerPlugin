@@ -22,13 +22,41 @@ class npOptimizeAssetsTask extends sfBaseTask
     ));
     
     $this->addOptions(array(
-      new sfCommandOption('env', null, sfCommandOption::PARAMETER_REQUIRED, 'The environment name', 'dev'),
+      new sfCommandOption('env', null, sfCommandOption::PARAMETER_REQUIRED, 'The environment name', 'prod'),
       new sfCommandOption('type', null, sfCommandOption::PARAMETER_REQUIRED, sprintf('The type of assets to optimize (%s)', implode(', ', self::$types)), $default = 'all'),
     ));
     
     $this->namespace = 'optimize';
     $this->name = 'assets';
     $this->briefDescription = 'Optimizes assets';
+    $this->detailedDescription = <<<EOF
+The [optimize:assets|INFO] task optimizes javascript, stylesheet and
+PNG image files as configured for the provided symfony application 
+name. For optimizations configured in the [frontend|INFO] app.yml file:
+
+  [php symfony optimize:assets frontend|INFO]
+
+For optimizations configured in the [backend|INFO] app.yml file:
+
+  [php symfony optimize:assets backend|INFO]
+
+To only optimize javascript assets:
+
+  [php symfony optimize:assets frontend --type=javascript|INFO]
+
+To only optimize stylesheet assets:
+
+  [php symfony optimize:assets frontend --type=stylesheet|INFO]
+
+To only optimize PNG images:
+
+  [php symfony optimize:assets frontend --type=png_image|INFO]
+
+Of course, if you configured assets optimization only for a given 
+environement, you can target it by using the [--type|INFO] option:
+
+  [php symfony optimize:assets frontend --type=all --env=prod|INFO]
+EOF;
   }
   
   /**
@@ -92,7 +120,7 @@ class npOptimizeAssetsTask extends sfBaseTask
       }
       else
       {
-        $this->logSection($section, sprintf('packed %s: %s', $statistic['ratio'].'%', $this->formatTaskFilePath($file)));
+        $this->logSection($section, sprintf('compressed %s: %s', $statistic['ratio'].'%', $this->formatTaskFilePath($file)));
       }
     }
     

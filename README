@@ -44,6 +44,25 @@ Installation
 
 No need to say that if you're using SVN for your project, use the `svn:externals` property instead.
 
+### Enable the plugin
+
+Edit your `config/ProjectConfiguration.class.php` file to enable the plugin:
+
+    [php]
+    <?php
+    class ProjectConfiguration extends sfProjectConfiguration
+    {
+      public function setup()
+      {
+        $this->enablePlugins(array(
+          // ... other plugin(s)
+          'npAssetsOptimizerPlugin',
+        ));
+      }
+    }
+   
+You're done with the plugin installation, now you have to configure it.
+
 Basic configuration
 -------------------
 
@@ -87,7 +106,7 @@ Basic configuration of assets optimization is done in the `np_assets_optimizer_p
 
 Just create your own `np_assets_optimizer_plugin` in your application `app.yml` file to override these default settings.
 
-**Note:** for the `files` section of both `javascript` and `stylesheet` optimizer configuration sections, the ordering of files is extremely important and should reflect the order used in your own `view.yml` files. Also, the very same syntax should be used: don't use `main.css` in the `app.yml` file where it's `main` in the `view.yml` one.
+**Important note:** for the `files` section of both `javascript` and `stylesheet` optimizer configuration sections, the ordering of files is extremely important and should reflect the order used in your own `view.yml` files. Also, **the very same syntax should be used**: don't use `main.css` in the `app.yml` file where it's `main` or `/css/main.css` in the `view.yml` one.
 
 ### Available drivers
 
@@ -114,7 +133,7 @@ To optimize all assets in one call:
 
     $ php symfony optimize:assets --type=all
 
-To get full help on how to use this task, just lauch:
+To get full help on how to use this task, just launch:
 
     $ php symfony help optimize:assets
 
@@ -171,10 +190,14 @@ If you want to manage asset optimization by yourself, just extend the correspond
       }
     }
 
-Don't forget to declare the new driver to use for javascript assets in your `app.yml` file. Here we'll take part of the environment feature of symfony and only configure the optimizer for the `prod` environment:
+Don't forget to declare the new driver to use for javascript assets in your `app.yml` file.
+
+By default the task will use the `prod` environment, because asset optimizations are traditionnaly used in a production context.
+
+But in the example below, we'll configure the optimizer only for the `dev` environment:
 
     [yml]
-    prod:
+    dev:
       np_assets_optimizer_plugin:
         enabled: true
         class: npAssetsOptimizerService
@@ -189,13 +212,21 @@ Don't forget to declare the new driver to use for javascript assets in your `app
               files:
                 - jquery.js
                 - application.js
+    all:
+      np_assets_optimizer_plugin:
+        enabled: false
 
-Last, generate the new optimized javascript file with the `optimize:assets` task for the `prod` environment:
+Last, generate the new optimized javascript file with the `optimize:assets` task for the `dev` environment:
 
-    $ php symfony optimize:assets frontend --type=javascript --env=prod
+    $ php symfony optimize:assets frontend --type=javascript --env=dev
 
 Changelog
 ---------
+
+### v0.8.2 - 2009-12-XX
+
+ * **BC BREAK:** the `optimize:assets` task now uses the `prod` environment by default
+ * added an exception throw when the GoogleClosureCompilerAPI driver retrieves an error from a call to the service
 
 ### v0.8.1 - 2009-12-29
 

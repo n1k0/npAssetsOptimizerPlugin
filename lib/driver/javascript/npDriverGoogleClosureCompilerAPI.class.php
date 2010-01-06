@@ -16,7 +16,7 @@ class npDriverGoogleClosureCompilerApi extends npDriverBase
   {
     if (!function_exists('curl_init'))
     {
-      throw new RuntimeException('PHP CURL support must be enabled to use this driver');
+      throw new RuntimeException('PHP CURL support must be enabled to use the Google Closure Compiler API driver');
     }
     
     $content = file_get_contents($file);
@@ -27,6 +27,11 @@ class npDriverGoogleClosureCompilerApi extends npDriverBase
     curl_setopt($ch, CURLOPT_POSTFIELDS, 'output_info=compiled_code&output_format=text&compilation_level=SIMPLE_OPTIMIZATIONS&js_code='.urlencode($content));
     
     $optimizedContent = curl_exec($ch);
+    
+    if (200 != ($httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE)))
+    {
+      throw new RuntimeException(sprintf('The Google Closure Compiler API returned an HTTP %d error: %s', $httpCode, $optimizedContent));
+    }
     
     curl_close($ch);
     
