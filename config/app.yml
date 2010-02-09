@@ -1,6 +1,6 @@
-prod:
+all:
   np_assets_optimizer_plugin:
-    enabled: true                         # status of the plugin
+    enabled: false                        # status of the plugin
     class: npAssetsOptimizerService       # the plugin service class to use
     configuration:                        # optimization service configuration
       javascript:                         # Javascript optimizer configuration
@@ -27,7 +27,6 @@ prod:
           folders:                        # folders to scan for PNG files to optimize
             - %SF_WEB_DIR%/images         # by default, contains the web/images folder
 
-all:
+prod:
   np_assets_optimizer_plugin:
-    enabled: false
-    configuration: []
+    enabled: true
