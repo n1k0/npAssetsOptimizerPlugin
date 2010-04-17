@@ -48,7 +48,6 @@ No need to say that if you're using SVN for your project, use the `svn:externals
 
 Edit your `config/ProjectConfiguration.class.php` file to enable the plugin:
 
-    [php]
     <?php
     class ProjectConfiguration extends sfProjectConfiguration
     {
@@ -68,7 +67,6 @@ Basic configuration
 
 Basic configuration of assets optimization is done in the `np_assets_optimizer_plugin` section of a standard `app.yml` configuration file. The plugin ships with a commented default one you'll find in the `config` folder of the plugin directory:
 
-    [yaml]
     all:
       np_assets_optimizer_plugin:
         enabled: true                          # status of the plugin
@@ -145,7 +143,6 @@ These tasks **must be executed manually** every time you make one of these chang
 
 When optimized javascripts and css assets are generated, they aim to be used instead of the old ones. So you have to replace the calls to `include_javascripts()` and `include_stylesheets()` helpers in your layouts respectivelly by the `include_optimized_javascripts()` and `include_optimized_stylesheets()` ones, as shown in the example below:
 
-    [php]
     <html>
       <head>
         <?php include_http_metas() ?>
@@ -168,7 +165,6 @@ Advanced Configuration
 
 If you want to manage asset optimization by yourself, just extend the corresponding optimizer class; for instance, if you want to compress and combine javascript files your way instead of JSMin, JSminPlus or Google Closure Compiler ones, you can write your own driver by extending the `npDriverBase` class and implementing its abstract `doProcessFile($file, $replace = false)` method:
 
-    [php]
     class npDriverMyDriver extends npDriverBase
     {
       public function doProcessFile($file, $replace = false)
@@ -196,7 +192,6 @@ By default the task will use the `prod` environment, because asset optimizations
 
 But in the example below, we'll configure the optimizer only for the `dev` environment:
 
-    [yml]
     dev:
       np_assets_optimizer_plugin:
         enabled: true
