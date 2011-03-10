@@ -19,25 +19,25 @@ class npDriverPngCrush extends npDriverBase
     {
       throw new LogicException('PNG optimization only support file replacement atm');
     }
-    
+
     exec('which pngcrush', $output, $return);
-    
+
     if (!count($output) || $return > 0)
-    {      
+    {
       throw new RuntimeException('The pngcrush program is not available nor accessible by php');
     }
-    
+
     $tmpFile = sprintf('%s.tmp', $file);
-    
+
     exec(sprintf('pngcrush %s %s 2>/dev/null', escapeshellarg($file), escapeshellarg($tmpFile)), $output, $return);
-    
-    if (file_exists($tmpFile) && filesize($tmpFile) > filesize($file))
+
+    if (file_exists($tmpFile) && filesize($tmpFile) < filesize($file))
     {
       copy($tmpFile, $file);
     }
-    
+
     unlink($tmpFile);
-    
+
     return $file;
   }
 }
