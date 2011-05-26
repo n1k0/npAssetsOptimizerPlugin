@@ -26,6 +26,13 @@ all:
           driver: Pngout                  # driver name
           folders:                        # folders to scan for PNG files to optimize
             - %SF_WEB_DIR%/images         # by default, contains the web/images folder
+      jpeg_image:                         # JPEG images configuration section
+        enabled: false                    # status of optimization
+        class: npOptimizerJpegImage       # the JPEG image optimizer class to use
+        params:                           # optimizer class configuration
+          driver: Jpegtran                # driver name
+          folders:                        # folders to scan for JPEG files to optimize (.jpg & .jpeg)
+            - %SF_WEB_DIR%/images         # by default, contains the web/images folder
 
 prod:
   np_assets_optimizer_plugin:

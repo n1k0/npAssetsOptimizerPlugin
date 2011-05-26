@@ -8,7 +8,7 @@
  */
 class npOptimizeAssetsTask extends sfBaseTask
 {
-  static protected $types = array('all', 'javascript', 'png_image', 'stylesheet');
+  static protected $types = array('all', 'javascript', 'png_image', 'stylesheet', 'jpeg_image');
   
   protected $optimizer = null;
   
@@ -30,8 +30,8 @@ class npOptimizeAssetsTask extends sfBaseTask
     $this->name = 'assets';
     $this->briefDescription = 'Optimizes assets';
     $this->detailedDescription = <<<EOF
-The [optimize:assets|INFO] task optimizes javascript, stylesheet and
-PNG image files as configured for the provided symfony application 
+The [optimize:assets|INFO] task optimizes javascript, stylesheet
+PNG  and JPEG image files as configured for the provided symfony application 
 name. For optimizations configured in the [frontend|INFO] app.yml file:
 
   [php symfony optimize:assets frontend|INFO]
@@ -51,6 +51,10 @@ To only optimize stylesheet assets:
 To only optimize PNG images:
 
   [php symfony optimize:assets frontend --type=png_image|INFO]
+  
+To only optimize JPEG images:
+
+  [php symfony optimize:assets frontend --type=jpeg_image|INFO]
 
 Of course, if you configured assets optimization only for a given 
 environement, you can target it by using the [--type|INFO] option:
