@@ -6,6 +6,7 @@ This plugin provides a task to optimize web assets used in your project, typical
  * CSS files will be combined and compressed using  [cssmin](http://code.google.com/p/cssmin/) or the [Minify CSS Compressor](http://minify.googlecode.com/svn/trunk/min/lib/Minify/CSS/Compressor.php) library
  * Javascript files will be combined and compressed using [JSMin](http://github.com/rgrove/jsmin-php/), [JSminPlus](http://crisp.tweakblogs.net/blog/cat/716) or the [Google Closure Compiler API](http://code.google.com/intl/en_US/closure/compiler/docs/api-ref.html)
  * PNG web images will be optimized with [pngout](http://www.jonof.id.au/pngout), [advpng](http://advancemame.sourceforge.net/comp-readme.html) or [pngcrush](http://pmt.sourceforge.net/pngcrush/) if installed and available on the system
+ * JPEG web images will be optimized with [jpegtran](http://jpegclub.org/jpegtran/).
  * Of course you can create your own optimization drivers
 
 Combined javascript and css files will then replace original ones in the response, optionnaly with a timestamp appended as a GET parameter to force browsers to redownload them in case they're served with an `Expires` header and/or `304` HTTP status code, and if they've changed in the meanwhile.
@@ -29,6 +30,8 @@ Prerequisites
    - `pngout` ([get it](http://www.jonof.id.au/pngout)) 
    - `advpng` ([get it](http://advancemame.sourceforge.net/comp-readme.html)) 
    - `pngcrush` ([get it](http://pmt.sourceforge.net/pngcrush/)) 
+ * Optionally, this JPEG image optimization programs:
+   - `jpegtran` ([get it](http://jpegclub.org/jpegtran/)) 
 
 Installation
 ------------
@@ -101,6 +104,13 @@ Basic configuration of assets optimization is done in the `np_assets_optimizer_p
               driver: Pngout                   # PNG image optimization driver name
               folders:                         # folders to scan for PNG files to optimize
                 - %SF_WEB_DIR%/images          # by default, contains the web/images folder
+          jpeg_image:                          # JPEG images configuration section
+            enabled: false                     # status of optimization
+            class: npOptimizerJpegImage        # the JPEG image optimizer class to use
+            params:                            # optimizer class configuration
+              driver: Jpegtran                 # driver name
+              folders:                         # folders to scan for JPEG files to optimize (.jpg & .jpeg)
+                - %SF_WEB_DIR%/images          # by default, contains the web/images folder
 
 Just create your own `np_assets_optimizer_plugin` in your application `app.yml` file to override these default settings.
 
@@ -114,6 +124,9 @@ For stylesheets: `Cssmin` or `MinifyCssCompressor`.
 
 For PNG images: `Pngout`, `PngCrush` or `AdvPNG`.
 
+For JPEG images: `Jpegtran`.
+
+
 Usage
 -----
 
@@ -126,6 +139,7 @@ The `application` argument is mandatory, whereas the `type` option allows to set
     $ php symfony optimize:assets frontend --type=stylesheet
     $ php symfony optimize:assets frontend --type=javascript
     $ php symfony optimize:assets frontend --type=png_image
+    $ php symfony optimize:assets frontend --type=jpeg_image
 
 To optimize all assets in one call:
 
@@ -140,6 +154,7 @@ These tasks **must be executed manually** every time you make one of these chang
  * adding or modifying a CSS file handled by the plugin
  * adding or modifying a Javascript file handled by the plugin
  * adding or modifying a PNG image handled by the plugin
+ * adding or modifying a JPEG image handled by the plugin
 
 When optimized javascripts and css assets are generated, they aim to be used instead of the old ones. So you have to replace the calls to `include_javascripts()` and `include_stylesheets()` helpers in your layouts respectivelly by the `include_optimized_javascripts()` and `include_optimized_stylesheets()` ones, as shown in the example below:
 

@@ -36,6 +36,13 @@ class npAssetsOptimizerService
           'destination' => '/css/optimized.css',
         ),
       ),
+      'jpeg_image' => array(
+        'enabled' => false,
+        'class' => 'npOptimizerJpegImage',
+        'params' => array(
+          'driver' => 'Jpegtran',
+        ),
+      ),
     ),
     $dispatcher    = null;
   
