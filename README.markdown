@@ -27,11 +27,11 @@ Prerequisites
 
  * PHP CURL extension enabled and available using the php command line for Google Closure Compiler support
  * Optionally, these PNG image optimization programs:
-   - `pngout` ([get it](http://www.jonof.id.au/pngout)) 
-   - `advpng` ([get it](http://advancemame.sourceforge.net/comp-readme.html)) 
-   - `pngcrush` ([get it](http://pmt.sourceforge.net/pngcrush/)) 
+   - `pngout` ([get it](http://www.jonof.id.au/pngout))
+   - `advpng` ([get it](http://advancemame.sourceforge.net/comp-readme.html))
+   - `pngcrush` ([get it](http://pmt.sourceforge.net/pngcrush/))
  * Optionally, this JPEG image optimization programs:
-   - `jpegtran` ([get it](http://jpegclub.org/jpegtran/)) 
+   - `jpegtran` ([get it](http://jpegclub.org/jpegtran/))
 
 Installation
 ------------
@@ -62,7 +62,7 @@ Edit your `config/ProjectConfiguration.class.php` file to enable the plugin:
         ));
       }
     }
-   
+
 You're done with the plugin installation, now you have to configure it.
 
 Basic configuration
@@ -185,17 +185,17 @@ If you want to manage asset optimization by yourself, just extend the correspond
       public function doProcessFile($file, $replace = false)
       {
         // optimize javascript contents here...
-    
+
         if ($replace)
         {
           // replace file here
-          
+
           return $file;
         }
         else
         {
           // fetch contents from $file, optimize it, and return it
-          
+
           return $optimizedContents;
         }
       }
@@ -233,6 +233,10 @@ Last, generate the new optimized javascript file with the `optimize:assets` task
 Changelog
 ---------
 
+### v0.8.3 - 2012-01-04 (wow, it's been a while)
+
+ * fixed #6 - jpg optimization kills the jpg
+
 ### v0.8.2 - 2009-12-XX
 
  * **BC BREAK:** the `optimize:assets` task now uses the `prod` environment by default
@@ -251,7 +255,7 @@ Many thanks to [Pascal Borreli](http://borreli.com/) for the bug reports.
  * **BC BREAK:** The accepted `type` options of the `optimize:assets` tasks have been renamed and are now `all`, `javascript`, `stylesheet` and `png_image`
  * **BC BREAK:** Refactored drivers management, they now have their own classes
  * Added `JSMinPlus` javascript optimization driver, based on [JSminPlus](http://crisp.tweakblogs.net/blog/cat/716)
- * **BC BREAK:** Driver names now reflects the driver class name: 
+ * **BC BREAK:** Driver names now reflects the driver class name:
    - `JSMin` driver will use the `npDriverJSMin` class
    - `JSMinPlus` driver will use the `npDriverJSMinPlus` class
    - `GoogleClosureCompilerAPI` driver will use the `npDriverGoogleClosureCompilerAPI` class
