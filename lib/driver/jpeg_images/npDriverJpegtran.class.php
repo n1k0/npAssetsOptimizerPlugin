@@ -21,18 +21,23 @@ class npDriverJpegtran extends npDriverBase
     {
       throw new LogicException('JPEG optimization only support file replacement atm');
     }
-    
+
     exec('which jpegtran', $output, $return);
-    
+
     if (!count($output) || $return > 0)
-    {      
+    {
       throw new RuntimeException('The jpegtran program is not available nor accessible by php on your system');
     }
-    
-    exec(sprintf('jpegtran -copy none -optimize %s 2>/dev/null', escapeshellarg($file)), $output, $return);
 
-    $this->replaceFile($file, $output);
-    
+    $command = sprintf('jpegtran -copy none -optimize -perfect -outfile %s %s', escapeshellarg($file), escapeshellarg($file));
+
+    exec($command, $output, $return);
+
+    if ($return > 0)
+    {
+      throw new RuntimeException(sprintf("Error status code %d received while executing command: %s", $return, $command));
+    }
+
     return $file;
   }
 }
