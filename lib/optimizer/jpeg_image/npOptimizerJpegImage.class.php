@@ -14,7 +14,7 @@ class npOptimizerJpegImage extends npOptimizerBase
   public function configure(array $configuration = array())
   {
     parent::configure($configuration);
-    
+
     if (isset($configuration['files']))
     {
       parent::setFiles($configuration['files']);
@@ -27,11 +27,11 @@ class npOptimizerJpegImage extends npOptimizerBase
     {
       throw new sfConfigurationException('You must define either a "files" or a "folders" option to use this optimizer');
     }
-    
+
     // JPEG images will be replaced by their optimized versions
     $this->replaceFiles = true;
   }
-  
+
   /**
    * Finds JPEG images within provided absolute paths
    *
@@ -49,16 +49,16 @@ class npOptimizerJpegImage extends npOptimizerBase
       {
         throw new InvalidArgumentException(sprintf('"%s" is not a valid readable directory'));
       }
-      
-      foreach (sfFinder::type('file')->name('/\.jpe?g$/')->in($folder) as $file)
+
+      foreach (sfFinder::type('file')->name('/\.jpe?g$/i')->in($folder) as $file)
       {
         $files[] = $file;
       }
     }
-    
+
     return $files;
   }
-  
+
   /**
    * @see npOptimizerBase
    */
