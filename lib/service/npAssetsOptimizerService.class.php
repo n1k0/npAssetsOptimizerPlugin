@@ -125,7 +125,9 @@ class npAssetsOptimizerService
       $response->removeJavascript($file);
     }
     
-    $response->addJavascript($javascriptOptimizer->getOptimizedFileWebPath(), 'first');
+    $options = ($this->configuration['javascript']['params']['absolute_url']) ? array("absolute" => true) : array();
+
+    $response->addJavascript($javascriptOptimizer->getOptimizedFileWebPath(), 'first', $options);
   }
   
   /**
@@ -145,8 +147,10 @@ class npAssetsOptimizerService
     {
       $response->removeStylesheet($file);
     }
+
+    $options = ($this->configuration['stylesheet']['params']['absolute_url']) ? array("absolute" => true) : array();
     
-    $response->addStylesheet($stylesheetOptimizer->getOptimizedFileWebPath(), 'first');
+    $response->addStylesheet($stylesheetOptimizer->getOptimizedFileWebPath(), 'first', $options);
   }
   
   /**
